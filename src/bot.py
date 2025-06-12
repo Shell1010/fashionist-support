@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional, override
+from typing import List, Optional
 
 import aiohttp
 import discord
