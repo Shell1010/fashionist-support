@@ -32,10 +32,11 @@ class CloseModal(discord.ui.Modal):
                 not_found.append(user)
 
         if len(not_found) > 0:
+            names = "\n".join(not_found)
             await interaction.response.send_message(
                 embed=self.bot.base_embed(
                     "Username not found!",
-                    f"The following usernames weren't found, please double check spelling!\n{'\n'.join(not_found)}",
+                    f"The following usernames weren't found, please double check spelling!\n{not_found}",
                 ),
                 ephemeral=True,
             )

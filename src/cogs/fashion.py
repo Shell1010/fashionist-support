@@ -21,6 +21,7 @@ class Fashion(commands.Cog):
     @app_commands.command(
         name="modals", description="Initialise embeds for support channel"
     )
+    @commands.has_permissions(manage_channels=True)
     async def modals(self, interaction: discord.Interaction) -> None:
         await interaction.response.defer(thinking=True)
         embeds: List[discord.Embed] = []
