@@ -23,7 +23,7 @@ class QueryView(discord.ui.View):
 
 
 
-class ItemPaginator(discord.ui.View):
+class ArmourPaginator(discord.ui.View):
     def __init__(self, pages: List[discord.Embed], author: discord.User) -> None:
         super().__init__(timeout=None)
         self.pages = pages
@@ -41,3 +41,25 @@ class ItemPaginator(discord.ui.View):
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
         await interaction.response.edit_message(embed=self.pages[0], view=self)
+
+
+class ItemPaginator(discord.ui.View):
+    def __init__(self, pages: List[discord.Embed], author: discord.User) -> None:
+        super().__init__(timeout=None)
+        self.pages = pages
+        self.author = author
+        self.current_page = 0
+
+    @discord.ui.button(label="Animated")
+    async def show_female(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        await interaction.response.edit_message(embed=self.pages[-1], view=self)
+
+    @discord.ui.button(label="Normal")
+    async def show_male(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        await interaction.response.edit_message(embed=self.pages[0], view=self)
+
+

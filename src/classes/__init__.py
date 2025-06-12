@@ -1,3 +1,4 @@
+from .database import DatabaseManager
 from .embed import EmbedHelper
-from .paginator import ItemPaginator
-from .modals import TicketView, FashionInitView, FashionTicketModal
+from .modals import FashionInitView, FashionTicketModal, TicketView
+from .paginator import ArmourPaginator, ItemPaginator

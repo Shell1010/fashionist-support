@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 from uuid import uuid4
 
@@ -11,10 +12,18 @@ if TYPE_CHECKING:
 
 
 class CloseModal(discord.ui.Modal):
-    def __init__(self, bot: FashionThing, user: discord.User | discord.Member) -> None:
+    def __init__(
+        self,
+        bot: FashionThing,
+        user: discord.User | discord.Member,
+        username: str,
+        reason: str,
+    ) -> None:
         super().__init__(title="Closing Ticket", timeout=None, custom_id=str(uuid4()))
         self.bot = bot
         self.user = user
+        self.username = username
+        self.reason = reason
 
         self.helpers = discord.ui.TextInput(
             label="Helpers",
@@ -36,7 +45,17 @@ class CloseModal(discord.ui.Modal):
             await interaction.response.send_message(
                 embed=self.bot.base_embed(
                     "Username not found!",
-                    f"The following usernames weren't found, please double check spelling!\n{not_found}",
+                    f"The following usernames weren't found, please double check spelling!\n{names}",
+                ),
+                ephemeral=True,
+            )
+            return
+
+        if self.username in usernames:
+            await interaction.response.send_message(
+                embed=self.bot.base_embed(
+                    "You can't credit yourself!",
+                    f"I see you...",
                 ),
                 ephemeral=True,
             )
@@ -49,16 +68,38 @@ class CloseModal(discord.ui.Modal):
                 f"This ticket is now closed, thank you for the following helpers:\n{self.helpers.value}",
             )
         )
+        for username in usernames:
+            await self.bot.db.submit_score(username, 1)
+
+        channel = self.bot.get_channel(self.bot.logs)  # 1357585230835224618
+
+        await channel.send(
+            embed=(
+                self.bot.base_embed("Ticket Completed", "")
+                .add_field(name="Ticket Creator", value=f"{self.user.name}")
+                .add_field(name="AQW Username", value=f"{self.username}")
+                .add_field(name="Reason", value=f"{self.reason}")
+                .add_field(name="helpers", value=f"{self.helpers.value}", inline=False)
+            )
+        )
         await asyncio.sleep(2)
-        await interaction.channel.delete(reason="Ticket complete") # type: ignore - stfu
+        await interaction.channel.delete(reason="Ticket complete")  # type: ignore - stfu
         return
 
 
 class TicketView(discord.ui.View):
-    def __init__(self, bot: FashionThing, user: discord.User | discord.Member):
+    def __init__(
+        self,
+        bot: FashionThing,
+        user: discord.User | discord.Member,
+        username: str,
+        reason: str,
+    ):
         super().__init__(timeout=None)
         self.bot = bot
         self.user = user
+        self.username = username
+        self.reason = reason
 
     @discord.ui.button(label="Close", style=discord.ButtonStyle.red)
     async def close_ticket(
@@ -72,7 +113,7 @@ class TicketView(discord.ui.View):
                 ),
                 ephemeral=True,
             )
-        modal = CloseModal(self.bot, self.user)
+        modal = CloseModal(self.bot, self.user, self.username, self.reason)
         await interaction.response.send_modal(modal)
 
 
@@ -122,18 +163,25 @@ class FashionTicketModal(discord.ui.Modal):
 
         category = interaction.channel.category  # type: ignore - stupid ass python
         channel = await category.create_text_channel(
-            f"fashion-support-{self.username.value.lower()}"
+            f"ꜰᴀꜱʜɪᴏɴ-ꜱᴜᴘᴘᴏʀᴛ-{self.bot.replace_word(self.username.value)}"
         )
         await channel.send(
-            embed=self.bot.base_embed(
-                f"Fashion Assistance - {self.task.value}",
-                "Use this channel to discuss stuff yes (i forgot tell me what to add here)",
+            content=f"<@&{self.bot.fashion_helper}> {self.user.mention}",
+            embed=(
+                self.bot.base_embed(
+                    f"Fashion Assistance - {self.task.value}",
+                    "Use this channel to discuss stuff yes (i forgot tell me what to add here)",
+                )
+                .add_field(name="Username", value=f"{aqw_username}")
+                .add_field(name="Reason", value=f"{self.task.value}")
             ),
-            view=TicketView(self.bot, self.user),
+            view=TicketView(self.bot, self.user, aqw_username, self.task.value),
         )
         await interaction.response.send_message(
-            embed=self.bot.base_embed("Ticket Created", f"Please move to {channel.mention} for your ticket."),
-            ephemeral=True
+            embed=self.bot.base_embed(
+                "Ticket Created", f"Please move to {channel.mention} for your ticket."
+            ),
+            ephemeral=True,
         )
         return
 
@@ -149,3 +197,15 @@ class FashionInitView(discord.ui.View):
     ):
         modal = FashionTicketModal(self.bot, interaction.user)
         await interaction.response.send_modal(modal)
+
+    @discord.ui.button(label="Become a Fashion Helper!")
+    async def become_helper(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ) -> None:
+        await interaction.user.add_roles(discord.Object(id=self.bot.fashion_helper))
+        await interaction.response.send_message(
+            embed=self.bot.base_embed(
+                "Successfully added Role", "You are now a Fashion Helper!"
+            ),
+            ephemeral=True,
+        )
