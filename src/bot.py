@@ -58,8 +58,8 @@ class FashionThing(commands.Bot):
         except:
             # not armour - yes this is ass way of doing it
             div = bs.find(id="page-content")
-            if img := div.find("img"):
-                if src := img.get("src"):
+            if imgs := div.find_all("img"):
+                if src := imgs[-1].get("src"):
                     images.append(src)
 
         return images
@@ -70,11 +70,14 @@ class FashionThing(commands.Bot):
         resp = await self.session.get(f"http://aqwwiki.wikidot.com/search:main/fullname/{item}")
         bs = BeautifulSoup((await resp.text()), "html.parser")
         div = bs.find(class_="list-pages-item")
-        if a_tags := div.find_all("a"):
-            for a in a_tags:
-                if href := a.get("href"):
-                    if not any(excluded_sub in href for excluded_sub in excluded_substrings):
-                        urls.append(f"http://aqwwiki.wikidot.com{href}")
+        try:
+            if a_tags := div.find_all("a"):
+                for a in a_tags:
+                    if href := a.get("href"):
+                        if not any(excluded_sub in href for excluded_sub in excluded_substrings):
+                            urls.append(f"http://aqwwiki.wikidot.com{href}")
+        except:
+            pass
 
         return urls
 
