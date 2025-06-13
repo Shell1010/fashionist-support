@@ -1,12 +1,15 @@
+import asyncio
 import os
+import re
+from datetime import date, datetime
 from typing import List, Optional
 
 import aiohttp
 import discord
-from discord.ext import commands
 from bs4 import BeautifulSoup
-from .classes import EmbedHelper, DatabaseManager
-import re
+from discord.ext import commands
+
+from .classes import DatabaseManager, EmbedHelper
 
 ALPHABET = {
     "a": "ᴀ",
@@ -34,14 +37,17 @@ ALPHABET = {
     "w": "ᴡ",
     "x": "x",
     "y": "ʏ",
-    "z": "ᴢ"
+    "z": "ᴢ",
 }
 
+
 class FashionThing(commands.Bot):
-    def __init__(self, token: str, admins: dict[str, int], db_uri: str, *args, **kwargs) -> None:
+    def __init__(
+        self, token: str, admins: dict[str, int], db_uri: str, *args, **kwargs
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.admins: dict[str, int] = admins
-        self.db = DatabaseManager(self, db_uri) 
+        self.db = DatabaseManager(self, db_uri)
         self.token: str = token
         self.embed_helper: EmbedHelper = EmbedHelper()
         self.alphabet = ALPHABET
@@ -54,7 +60,9 @@ class FashionThing(commands.Bot):
     def go(self):
         self.run(self.token)
 
-    def base_embed(self, title: str, description: str, url: Optional[str] = None) -> discord.Embed:
+    def base_embed(
+        self, title: str, description: str, url: Optional[str] = None
+    ) -> discord.Embed:
         return self.embed_helper.base_embed(title, description, url)
 
     async def load_all_cogs(self):
@@ -75,8 +83,8 @@ class FashionThing(commands.Bot):
         return new
 
     def title_except(self, text: str) -> str:
-        articles = ['a', 'an', 'of', 'the', 'is']
-        word_list = re.split(' ', text)       # re.split behaves as expected
+        articles = ["a", "an", "of", "the", "is"]
+        word_list = re.split(" ", text)  # re.split behaves as expected
         final = [word_list[0].capitalize()]
         for word in word_list[1:]:
             final.append(word if word in articles else word.capitalize())
@@ -90,20 +98,19 @@ class FashionThing(commands.Bot):
         bs = BeautifulSoup(resp, "html.parser")
         div = bs.find(id="breadcrumbs")
         a = div.find("a", href="/armors") or div.find("a", href="/classes")
-    
-        return True if a else False
 
+        return True if a else False
 
     async def get_image_url(self, resp: str) -> List[str]:
         images = []
         bs = BeautifulSoup(resp, "html.parser")
         try:
-            div = bs.find(id="wiki-tab-0-0") # male
+            div = bs.find(id="wiki-tab-0-0")  # male
             if img := div.find("img"):
                 if src := img.get("src"):
                     images.append(src)
 
-            div = bs.find(id="wiki-tab-0-1") # female
+            div = bs.find(id="wiki-tab-0-1")  # female
             if img := div.find("img"):
                 if src := img.get("src"):
                     images.append(src)
@@ -124,26 +131,28 @@ class FashionThing(commands.Bot):
     async def search_item(self, item: str) -> List[str]:
         urls = []
         excluded_substrings = ["location", "monster"]
-        resp = await self.session.get(f"http://aqwwiki.wikidot.com/search:main/fullname/{item}")
+        resp = await self.session.get(
+            f"http://aqwwiki.wikidot.com/search:main/fullname/{item}"
+        )
         bs = BeautifulSoup((await resp.text()), "html.parser")
         div = bs.find(class_="list-pages-item")
         try:
             if a_tags := div.find_all("a"):
                 for a in a_tags:
                     if href := a.get("href"):
-                        if not any(excluded_sub in href for excluded_sub in excluded_substrings):
+                        if not any(
+                            excluded_sub in href for excluded_sub in excluded_substrings
+                        ):
                             urls.append(f"http://aqwwiki.wikidot.com{href}")
         except:
             pass
 
         return urls
 
-
     async def setup_hook(self) -> None:
         self.session = aiohttp.ClientSession()
         await self.load_all_cogs()
         return await super().setup_hook()
-
 
     async def verify_username(self, username: str) -> bool:
         resp = await self.session.get(f"https://account.aq.com/CharPage?id={username}")
@@ -152,6 +161,28 @@ class FashionThing(commands.Bot):
                 return True
         return False
 
+    async def monthly_check(self) -> None:
+        while True:
+            await asyncio.sleep(3)
+            month = datetime.now().strftime("%B")
+            db_month = (await self.db.get_month())[0]
+            print(db_month['value'], month)
+            if db_month['value'] != month:
+                channel = self.get_channel(self.logs)
+                top_3 = await self.db.get_leaderboard(3)
+                msg = ""
+                for idx, mem in enumerate(top_3, 1):
+                    msg += f"{idx}. {mem['username']} ({mem['score']})\n"
+                await channel.send(
+                    content=f"<@&{self.fashion_helper}>",
+                    embed=self.base_embed(
+                        "Monthly Winners",
+                        f"Here are the Top 3 helpers for this month\n\n{msg}",
+                    )
+                )
+
+                await self.db.reset()
+                await self.db.update_month(month)
 
     async def sync(self):
         await self.tree.sync()
@@ -160,3 +191,6 @@ class FashionThing(commands.Bot):
     async def on_ready(self):
         print(f"{self.user.name } is ONLINE!")
         # await self.sync()
+        # await self.db.submit_score("archfishy", 100)
+        # await self.db.update_month("January")
+        asyncio.create_task(self.monthly_check())
