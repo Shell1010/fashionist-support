@@ -163,7 +163,7 @@ class FashionThing(commands.Bot):
 
     async def monthly_check(self) -> None:
         while True:
-            await asyncio.sleep(3)
+            await asyncio.sleep(3600)
             month = datetime.now().strftime("%B")
             db_month = (await self.db.get_month())[0]
             print(db_month['value'], month)
