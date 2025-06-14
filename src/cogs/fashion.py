@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
 import discord
 from discord import app_commands
 from discord.ext import commands
-from datetime import datetime
+
 from ..classes import ArmourPaginator, FashionInitView, ItemPaginator
 
 if TYPE_CHECKING:
@@ -15,6 +16,39 @@ if TYPE_CHECKING:
 class Fashion(commands.Cog):
     def __init__(self, bot: FashionThing) -> None:
         self.bot = bot
+
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        channel = self.bot.get_channel(1350262093190008945)
+
+        embeds: List[discord.Embed] = []
+        embeds.append(
+            self.bot.base_embed(
+                "Fashion Assistance",
+                "**Need Fashion Help? Open a Ticket!**\nWelcome to Fashion Support! If you're stuck on a set, need advice, or want feedback, we've got a team ready to help.",
+            ).set_thumbnail(
+                url="https://images-ext-1.discordapp.net/external/3UcfzmtXltk9GAN_08ZtTL7xa0lhlmi4yLeEGVm-h4I/https/cdn.discordapp.com/icons/872171573870735410/8b0f20b167ed00efbbe1046f955068ba.png"
+            )
+        )
+        embeds.append(
+            self.bot.base_embed(
+                "Fashion Help Guide",
+                "Click the button below to create a private support ticket and a Fashion Helper will be pinged and join shortly, You'll have 1 hour to get support before the ticket closes automatically - so be quick and clear!\n\nPlease include in the form:\n- The task you need help on (e.g Item Hunting, IODA Suggestions, Set Suggestions, etc)\n- URL of your character's set (Optional)\n- Your AQWorlds username",
+            )
+        )
+        embeds.append(
+            self.bot.base_embed(
+                "Fashion Helper Rewards",
+                "After you're done, use the close button with the names of your fashion helpers (each username on a separete line). They each gain points tallied to a leaderboard. ",
+            )
+        )
+        await channel.purge(limit=10)
+
+        await channel.send(embeds=embeds, view=FashionInitView(self.bot))
+
+ 
+
 
     # idk what to call it
     @app_commands.command(
@@ -113,7 +147,10 @@ class Fashion(commands.Cog):
         msg = f"Top {len(leaderboard)} Fashion Helpers for {datetime.now().strftime('%B')}\n\n"
         for idx, entry in enumerate(leaderboard, start=1):
             msg += f"{idx}. {entry['username'].capitalize()} ({entry['score']})\n"
-        await interaction.followup.send(embed=self.bot.base_embed("Fashion Helper Leaderboard", msg))
+        await interaction.followup.send(embed=self.bot.base_embed("Fashion Helper Leaderboard", msg).set_thumbnail(
+                url="https://images-ext-1.discordapp.net/external/3UcfzmtXltk9GAN_08ZtTL7xa0lhlmi4yLeEGVm-h4I/https/cdn.discordapp.com/icons/872171573870735410/8b0f20b167ed00efbbe1046f955068ba.png"
+            ))
+
 
     @app_commands.command(name="reset", description="Resets leaderboard")
     @app_commands.checks.has_permissions(administrator=True)

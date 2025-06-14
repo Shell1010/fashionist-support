@@ -155,11 +155,30 @@ class FashionThing(commands.Bot):
         return await super().setup_hook()
 
     async def verify_username(self, username: str) -> bool:
-        resp = await self.session.get(f"https://account.aq.com/CharPage?id={username}")
-        if resp.ok:
-            if not "Not Found" in (await resp.text()):
-                return True
+        text = await self.get_char_page(username) 
+        if not "Not Found" in text:
+            return True
         return False
+
+
+    async def get_char_page(self, username: str) -> str:
+        headers = {
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "accept-encoding": "gzip, deflate, br",
+            "accept-language": "en-GB",
+            "artixmode": "launcher",
+            "cache-control": "max-age=0",
+            "cookie": "__cflb=04dTocX5CGvapQX63C16eHjNv6zbskMmRgUzsXQsRX; _gid=GA1.2.566334845.1749907274;_ gat_gtag_UA_43443388_4=1; _ga_1FTKJ82KTX=GS2.1.s1749907274$o35$g0$t1749907274$j60$l0$h0; _ga=GA1.1.1787332714.1739564226",
+            "referer": "https://account.aq.com/CharPage?id={username}",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-origin",
+            "sec-fetch-user": "?1",
+            "upgrade-insecure-requests": "1",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36"
+        }
+        resp = await self.session.get(f"https://account.aq.com/CharPage?id={username}", headers=headers)
+        return await resp.text()
 
     async def monthly_check(self) -> None:
         while True:
