@@ -14,7 +14,7 @@ def main():
         {"daylah": 1105202115850285116, "fish": 1143657502941122580},
         os.environ["DB_URI"],
         intents=discord.Intents.all(),
-        command_prefix="!",
+        command_prefix="<>",
         help_command=None,
     )
 

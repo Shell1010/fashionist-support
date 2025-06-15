@@ -209,7 +209,7 @@ class FashionThing(commands.Bot):
     @commands.Cog.listener()
     async def on_ready(self):
         print(f"{self.user.name } is ONLINE!")
-        # await self.sync()
+        await self.sync()
         # await self.db.submit_score("archfishy", 100)
         # await self.db.update_month("January")
         asyncio.create_task(self.monthly_check())

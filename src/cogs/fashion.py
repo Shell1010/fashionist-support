@@ -81,20 +81,6 @@ class Fashion(commands.Cog):
 
         await interaction.followup.send(embeds=embeds, view=FashionInitView(self.bot))
 
-    @app_commands.command(name="sync", description="Syncs slash commands to server")
-    @app_commands.checks.has_permissions(administrator=True)
-    async def sync(self, interaction: discord.Interaction) -> None:
-        await interaction.response.defer(thinking=True)
-        await self.bot.sync()
-        await interaction.followup.send(
-            embed=self.bot.base_embed(
-                "Synced Commands", "Commands have been successfully synced!"
-            )
-        )
-
-    @sync.error
-    async def sync_error(self, interaction: discord.Interaction, error):
-        await interaction.response.send_message(embed=self.bot.base_embed("Administrator Required", "Need to be Admin to run this command."))
 
     @app_commands.command(name="suggest", description="Suggest an item")
     @app_commands.describe(item="The item you wish to suggest")
