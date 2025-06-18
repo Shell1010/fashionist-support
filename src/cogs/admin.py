@@ -63,7 +63,6 @@ class Admin(commands.Cog):
         await ctx.response.defer()
         
         if ctx.user.id in self.bot.admins.values():
-            # Step 1: Pull latest changes from GitHub
             result = subprocess.run(["git", "pull"], capture_output=True, text=True)
             
             if "Already up to date" in result.stdout:
@@ -73,7 +72,6 @@ class Admin(commands.Cog):
             elif result.returncode == 0:
                 await ctx.followup.send(embed=self.bot.base_embed("Updating Bot", "Pulled latest changes successfully. Reloading cogs..."))
 
-                # Step 2: Reload all cogs
                 for file in os.listdir("./src/cogs"):
                     if file.endswith(".py") and "__init__" not in file:
                         try:
@@ -83,7 +81,6 @@ class Admin(commands.Cog):
 
                 await ctx.followup.send(embed=self.bot.base_embed("Update Complete", "All cogs reloaded successfully."))
             else:
-                # If there was an error pulling from GitHub
                 await ctx.followup.send(embed=self.bot.base_embed("Update Failed", f"Could not pull updates from GitHub.\n{result.stderr}"))
         else:
             await ctx.followup.send(embed=self.bot.base_embed("Unauthorized", "You do not have permission to use this command."), ephemeral=True)

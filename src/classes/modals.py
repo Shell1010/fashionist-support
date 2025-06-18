@@ -170,10 +170,11 @@ class FashionTicketModal(discord.ui.Modal):
             embed=(
                 self.bot.base_embed(
                     f"Fashion Assistance - {self.task.value}",
-                    "Use this channel to discuss stuff yes (i forgot tell me what to add here)",
+                    "Fashion Helpers were pinged, help will arrive shortly. After you're done please remember to credit your helpers when closing the ticket. They gain points for a monthly leaderboard.",
                 )
                 .add_field(name="Username", value=f"{aqw_username}")
                 .add_field(name="Reason", value=f"{self.task.value}")
+                .set_image(url=self.character_url.value)
             ),
             view=TicketView(self.bot, self.user, aqw_username, self.task.value),
         )
