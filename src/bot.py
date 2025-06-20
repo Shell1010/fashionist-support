@@ -8,8 +8,11 @@ import aiohttp
 import discord
 from bs4 import BeautifulSoup
 from discord.ext import commands
-
+import pytz
 from .classes import DatabaseManager, EmbedHelper
+
+FLORIDA_TZ = pytz.timezone('America/New_York')
+
 
 ALPHABET = {
     "a": "ᴀ",
@@ -148,6 +151,36 @@ class FashionThing(commands.Bot):
             pass
 
         return urls
+    
+
+    def _get_florida_current_time(self):
+        
+        return datetime.now(FLORIDA_TZ)
+
+
+    def is_florida_midnight(self) -> bool:
+        florida_current_time = self._get_florida_current_time()
+
+        return (
+            florida_current_time.hour == 0 and
+            florida_current_time.minute == 0 and
+            florida_current_time.second == 0 and
+            florida_current_time.microsecond == 0
+        )
+
+    def is_florida_friday_start(self) -> bool:
+        florida_current_time = self._get_florida_current_time()
+
+        is_midnight = (
+            florida_current_time.hour == 0 and
+            florida_current_time.minute == 0 and
+            florida_current_time.second == 0 and
+            florida_current_time.microsecond == 0
+        )
+
+        is_friday = (florida_current_time.weekday() == 4)
+
+        return is_midnight and is_friday
 
     async def setup_hook(self) -> None:
         self.session = aiohttp.ClientSession()
