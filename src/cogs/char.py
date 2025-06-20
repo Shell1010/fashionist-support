@@ -46,7 +46,7 @@ class Aqw(commands.Cog):
             channel = self.bot.get_channel(878693420909068339)
             await channel.send(
                 content="<@&1385747900390183072>",
-                embed=self.bot.base_embed("Weekly Reset", "It's now the daily reset, log into AQW and complete your daily quests!")
+                embed=self.bot.base_embed("Daily Reset", "It's now the daily reset, log into AQW and complete your daily quests!")
                 .set_image(url="https://media.discordapp.net/attachments/1223684772413444218/1358373404033417287/photo-output.png")) # type: ignore
 
 
