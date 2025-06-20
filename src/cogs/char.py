@@ -52,9 +52,6 @@ class Aqw(commands.Cog):
 
 
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-         
 
 async def setup(bot: FashionThing):
     await bot.add_cog(Aqw(bot))
