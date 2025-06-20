@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional, override
+from typing import TYPE_CHECKING, List, Optional 
 
 import discord
 from discord import app_commands
